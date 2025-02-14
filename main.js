@@ -318,32 +318,6 @@ class LayerEdgeConnection {
         }
     }
 
-    async dailyCheckIn() {
-        const timestamp = Date.now();
-        const message = `Daily check-in request for ${this.wallet.address} at ${timestamp}`;
-        const sign = await this.wallet.signMessage(message);
-
-        const dataSign = {
-            sign: sign,
-            timestamp: timestamp,
-            walletAddress: this.wallet.address
-        };
-
-        const response = await this.makeRequest(
-            "post",
-            "https://referralapi.layeredge.io/api/light-node/claim-node-points",
-            { data: dataSign }
-        );
-
-        if (response && response.data) {
-            logger.info("Daily Check in Result:", response.data);
-            return true;
-        } else {
-            logger.error("Failed to perform daily check-in");
-            return false;
-        }
-    }
-
     async checkNodeStatus() {
         const response = await this.makeRequest(
             "get",
@@ -378,12 +352,12 @@ class LayerEdgeConnection {
 // Main Application
 async function readWallets() {
     try {
-        await fs.access("wallets1.json");
-        const data = await fs.readFile("wallets1.json", "utf-8");
+        await fs.access("wallets.json");
+        const data = await fs.readFile("wallets.json", "utf-8");
         return JSON.parse(data);
     } catch (err) {
         if (err.code === 'ENOENT') {
-            logger.info("No wallets found in wallets1.json");
+            logger.info("No wallets found in wallets.json");
             return [];
         }
         throw err;
@@ -420,9 +394,6 @@ async function run() {
                     
                     logger.progress(address, 'Wallet Processing Started', 'start');
                     logger.info(`Wallet Details`, `Address: ${address}, Proxy: ${proxy || 'No Proxy'}`);
-
-                    logger.progress(address, 'Performing Daily Check-in', 'processing');
-                    await socket.dailyCheckIn();
 
                     logger.progress(address, 'Checking Node Status', 'processing');
                     const isRunning = await socket.checkNodeStatus();
